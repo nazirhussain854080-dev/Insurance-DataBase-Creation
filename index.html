@@ -63,7 +63,7 @@
   </table>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbz7LOxrJ38ihOKmez5coU69mWQjQKYQD5jVL6_Ud4jqEeabWcCa8KratRdnhT5CW08O/exec"; // <-- paste your URL
+    const scriptURL = "https://script.google.com/macros/s/AKfycbz7LOxrJ38ihOKmez5coU69mWQjQKYQD5jVL6_Ud4jqEeabWcCa8KratRdnhT5CW08O/exec";
     let bulkRecords = [];
 
     // Add or Update Record
@@ -79,47 +79,54 @@
         amount: f.amount.value,
         paidUnpaid: f.paidUnpaid.value
       };
-     fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) })
-  .then(r => r.json())
-  .then(res => { 
-      alert(res.message); 
-      if (res.result === "success") {
-        f.reset(); 
-        loadData(); 
-      }
-  });
 
+      fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) })
+        .then(r => r.json())
+        .then(res => { 
+          alert(res.message); 
+          if (res.result === "success") {
+            f.reset(); 
+            loadData(); 
+          }
+        })
+        .catch(err => alert("Error: " + err));
+    });
 
     // Load Data
     function loadData() {
-      fetch(scriptURL).then(r => r.json()).then(rows => {
-        const search = document.getElementById('searchInput').value.toLowerCase();
-        const filter = document.getElementById('filterStatus').value;
-        const tbody = document.querySelector('#dataTable tbody');
-        tbody.innerHTML = "";
-        rows.filter(r =>
-          (!filter || r["Paid/Unpaid"] === filter) &&
-          (!search || r["Policy No."].toLowerCase().includes(search) ||
-                     r["Plate No."].toLowerCase().includes(search) ||
-                     r["Policy Type"].toLowerCase().includes(search))
-        ).forEach(r => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${r["S/No"]}</td>
-            <td>${r["Issue Date"]}</td>
-            <td>${r["Policy No."]}</td>
-            <td>${r["Plate No."]}</td>
-            <td>${r["Policy Type"]}</td>
-            <td>${r["Status"]}</td>
-            <td>${r["Amount"]}</td>
-            <td>${r["Paid/Unpaid"]}</td>
-            <td>
-              <button onclick='editRecord(${JSON.stringify(r)})'>Edit</button>
-              <button onclick='deleteRecord("${r["Policy No."]}")'>Delete</button>
-            </td>`;
-          tbody.appendChild(tr);
-        });
-      });
+      fetch(scriptURL)
+        .then(r => r.json())
+        .then(rows => {
+          const search = document.getElementById('searchInput').value.toLowerCase();
+          const filter = document.getElementById('filterStatus').value;
+          const tbody = document.querySelector('#dataTable tbody');
+          tbody.innerHTML = "";
+          rows
+            .filter(r =>
+              (!filter || r["Paid/Unpaid"] === filter) &&
+              (!search || r["Policy No."].toLowerCase().includes(search) ||
+                         r["Plate No."].toLowerCase().includes(search) ||
+                         r["Policy Type"].toLowerCase().includes(search))
+            )
+            .forEach((r, i) => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td>${i + 1}</td>
+                <td>${r["Issue Date"]}</td>
+                <td>${r["Policy No."]}</td>
+                <td>${r["Plate No."]}</td>
+                <td>${r["Policy Type"]}</td>
+                <td>${r["Status"]}</td>
+                <td>${r["Amount"]}</td>
+                <td>${r["Paid/Unpaid"]}</td>
+                <td>
+                  <button onclick='editRecord(${JSON.stringify(r)})'>Edit</button>
+                  <button onclick='deleteRecord("${r["Policy No."]}")'>Delete</button>
+                </td>`;
+              tbody.appendChild(tr);
+            });
+        })
+        .catch(err => alert("Unable to fetch data: " + err));
     }
 
     function editRecord(r) {
@@ -134,11 +141,16 @@
 
     function deleteRecord(policyNo) {
       if (!confirm("Delete this record?")) return;
-      fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "delete", policyNo }) })
-        .then(r => r.json()).then(() => { alert("Deleted!"); loadData(); });
+      fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({ action: "delete", policyNo })
+      })
+        .then(r => r.json())
+        .then(() => { alert("Deleted!"); loadData(); })
+        .catch(err => alert("Error deleting: " + err));
     }
 
-    // BULK UPLOAD (Excel)
+    // Bulk upload
     function uploadExcel() {
       const file = document.getElementById("excelFile").files[0];
       if (!file) return alert("Please select Excel file first!");
@@ -176,17 +188,11 @@
         body: JSON.stringify({ action: "bulkAdd", records: bulkRecords })
       })
       .then(r => r.json())
-      .then(() => { alert("Bulk data uploaded!"); loadData(); });
+      .then(() => { alert("Bulk data uploaded!"); loadData(); })
+      .catch(err => alert("Bulk upload failed: " + err));
     }
 
     window.onload = loadData;
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
