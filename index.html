@@ -112,7 +112,7 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td>${r["S/No"]}</td>
-              <td>${r["Issue Date"]}</td>
+              <td>${cleanDate(r["Issue Date"])}</td>
               <td>${r["Policy No."]}</td>
               <td>${r["Plate No."]}</td>
               <td>${r["Policy Type"]}</td>
@@ -193,10 +193,24 @@
       .then(() => { alert("Bulk data uploaded!"); loadData(); });
     }
 
+    function cleanDate(dateStr) {
+  if (!dateStr) return "";
+  // Remove RTL and hidden Unicode marks
+  dateStr = dateStr.replace(/[\u200E\u200F]/g, "").trim();
+  
+  // Try to reformat if it's a recognizable date
+  const d = new Date(dateStr);
+  if (!isNaN(d)) {
+    return d.toLocaleDateString("en-GB"); // "dd/mm/yyyy" format
+  }
+  return dateStr; // fallback if parsing fails
+}
+
     window.onload = loadData;
   </script>
 </body>
 </html>
+
 
 
 
