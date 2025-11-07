@@ -117,7 +117,7 @@
               <td>${r["Plate No."]}</td>
               <td>${r["Policy Type"]}</td>
               <td>${r["Status"]}</td>
-              <td>${r["Amount"]}</td>
+              <td>${r["amount"]}</td>
               <td>${r["Paid/Unpaid"]}</td>
               <td>
                 <button onclick='editRecord(${JSON.stringify(r)})'>Edit</button>
@@ -136,7 +136,7 @@
       f.plateNo.value = r["Plate No."];
       f.policyType.value = r["Policy Type"];
       f.status.value = r["Status"];
-      f.amount.value = r["Amount"];
+      f.amount.value = r["amount"];
       f.paidUnpaid.value = r["Paid/Unpaid"];
     }
 
@@ -166,7 +166,7 @@
           plateNo: r["Plate No."],
           policyType: r["Policy Type"],
           status: r["Status"],
-          amount: r["Amount"],
+          amount: r["amount"],
           paidUnpaid: r["Paid/Unpaid"]
         }));
 
@@ -197,6 +197,7 @@
   </script>
 </body>
 </html>
+
 
 
 
