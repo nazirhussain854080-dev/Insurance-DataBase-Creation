@@ -65,14 +65,13 @@
   </table>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbx8mJ8Y-plEN7goGPugtx19tSyjq0s3q2brBqIUFvj2L1hNJ8a0AYT1M7Vl7cbHLr8/exec";
+   const scriptURL = "https://script.google.com/macros/s/AKfycbx8mJ8Y-plEN7goGPugtx19tSyjq0s3q2brBqIUFvj2L1hNJ8a0AYT1M7Vl7cbHLr8/exec";
     let bulkRecords = [];
 
     // Helper Functions for Date Formatting
     function formatDateToDDMMYYYY(dateStr) {
       if (!dateStr) return "";
       dateStr = dateStr.replace(/[\u200E\u200F]/g, "").trim();
-
       const parts = dateStr.split(/[\/\-\.]/);
       if (parts.length === 3) {
         let [p1, p2, p3] = parts.map(x => x.padStart(2, "0"));
@@ -99,7 +98,7 @@
       const f = e.target;
       const data = {
         action: "add",
-        issueDate: f.issueDate.value,
+        issueDate: f.issueDate.value,  // ✅ send user-selected date
         policyNo: f.policyNo.value,
         plateNo: f.plateNo.value,
         policyType: f.policyType.value,
@@ -227,3 +226,6 @@
   </script>
 </body>
 </html>
+
+
+
