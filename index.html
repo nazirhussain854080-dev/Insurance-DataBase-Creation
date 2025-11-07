@@ -18,6 +18,7 @@
 
   <!-- Add / Update Form -->
   <form id="policyForm">
+    <input name="issueDate" type="date" required>
     <input name="policyNo" placeholder="Policy No." required>
     <input name="plateNo" placeholder="Plate No." required>
     <input name="policyType" placeholder="Policy Type" required>
@@ -66,12 +67,53 @@
   <script>
     const scriptURL = "https://script.google.com/macros/s/AKfycbx8mJ8Y-plEN7goGPugtx19tSyjq0s3q2brBqIUFvj2L1hNJ8a0AYT1M7Vl7cbHLr8/exec";
     let bulkRecords = [];
+
+    // Date formatting function (fix weird locale + show as dd/mm/yyyy)
+    function formatDateToDDMMYYYY(dateStr) {
+      if (!dateStr) return "";
+      dateStr = dateStr.replace(/[\u200E\u200F]/g, "").trim();
+      const d = new Date(dateStr);
+      if (isNaN(d)) {
+        const parts = dateStr.split(/[\/\-\.]/);
+        if (parts.length === 3) {
+          const [month, day, year] = parts;
+          return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
+        }
+        return dateStr;
+      }
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+
+    // Convert "dd/mm/yyyy" → "yyyy-mm-dd" for input type="date"
+    function convertToInputDateFormat(dateStr) {
+      if (!dateStr) return "";
+      dateStr = dateStr.replace(/[\u200E\u200F]/g, "").trim();
+      const parts = dateStr.split(/[\/\-\.]/);
+      if (parts.length === 3) {
+        let [day, month, year] = parts;
+        if (Number(day) > 12) { // likely dd/mm/yyyy
+          return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+        } else {
+          return `${year}-${day.padStart(2, "0")}-${month.padStart(2, "0")}`;
+        }
+      }
+      const d = new Date(dateStr);
+      if (!isNaN(d)) {
+        return d.toISOString().split("T")[0];
+      }
+      return "";
+    }
+
     // Add or Update Record
     document.getElementById('policyForm').addEventListener('submit', e => {
       e.preventDefault();
       const f = e.target;
       const data = {
         action: "add",
+        issueDate: f.issueDate.value,
         policyNo: f.policyNo.value,
         plateNo: f.plateNo.value,
         policyType: f.policyType.value,
@@ -117,7 +159,7 @@
               <td>${r["Plate No."]}</td>
               <td>${r["Policy Type"]}</td>
               <td>${r["Status"]}</td>
-              <td>${r["amount"]}</td>
+              <td>${r["amount "] ?? r["amount"]}</td>
               <td>${r["Paid/Unpaid"]}</td>
               <td>
                 <button onclick='editRecord(${JSON.stringify(r)})'>Edit</button>
@@ -129,18 +171,19 @@
         .catch(err => console.error("Error loading data:", err));
     }
 
-    // Edit
+    // Edit Record
     function editRecord(r) {
       const f = document.getElementById('policyForm');
+      f.issueDate.value = convertToInputDateFormat(r["Issue Date"]);
       f.policyNo.value = r["Policy No."];
       f.plateNo.value = r["Plate No."];
       f.policyType.value = r["Policy Type"];
       f.status.value = r["Status"];
-      f.amount.value = r["amount"];
+      f.amount.value = r["amount "] ?? r["amount"];
       f.paidUnpaid.value = r["Paid/Unpaid"];
     }
 
-    // Delete
+    // Delete Record
     function deleteRecord(policyNo) {
       if (!confirm("Delete this record?")) return;
       fetch(scriptURL, {
@@ -162,11 +205,12 @@
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
         bulkRecords = json.map(r => ({
+          issueDate: r["Issue Date"],
           policyNo: r["Policy No."],
           plateNo: r["Plate No."],
           policyType: r["Policy Type"],
           status: r["Status"],
-          amount: r["amount"],
+          amount: r["amount "] ?? r["amount"],
           paidUnpaid: r["Paid/Unpaid"]
         }));
 
@@ -193,42 +237,7 @@
       .then(() => { alert("Bulk data uploaded!"); loadData(); });
     }
 
-    function formatDateToDDMMYYYY(dateStr) {
-  if (!dateStr) return "";
-
-  // Remove hidden RTL characters
-  dateStr = dateStr.replace(/[\u200E\u200F]/g, "").trim();
-
-  // Try parsing the date
-  let d = new Date(dateStr);
-
-  if (isNaN(d)) {
-    // If the parsing fails (sometimes Google Sheets sends as "mm/dd/yyyy"), manually flip it
-    const parts = dateStr.split(/[\/\-\.]/);
-    if (parts.length === 3) {
-      const [month, day, year] = parts;
-      return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
-    }
-    return dateStr; // fallback
-  }
-
-  // Format as dd/mm/yyyy
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
-}
-
-
     window.onload = loadData;
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
